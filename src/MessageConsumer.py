@@ -7,6 +7,9 @@ class MassageConsummer(Consumer):
     def __init__(self, amqp_url: str):
         super().__init__(amqp_url)
 
+    def run(self):
+        super().run()
+
     def on_message(self, _unused_channel, basic_deliver, properties, body):
         pass
 
@@ -19,6 +22,7 @@ def main():
     vault_token = " the token "
     AMPQ_URL = "https://pht.tada5hi.net/api "
     massage_consumer = MassageConsummer(AMPQ_URL)
+
 
 
 if __name__ == '__main__':
