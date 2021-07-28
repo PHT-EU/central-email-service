@@ -1,0 +1,8 @@
+{
+    type: "trainStarted" ,
+    data: {
+        trainId: "81c616df-6e01-421f-aaa3-14b7fb90a555",
+        proposalId: "1234",
+        stationId: "1"
+    }
+}
