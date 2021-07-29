@@ -10,11 +10,11 @@ LOGGER = logging.getLogger(__name__)
 
 class MassageConsumer(Consumer):
     def __init__(self, amqp_url: str, queue: str = "", routing_key: str = None, ui_user: str = None,
-                 ui_token: str = None):
+                 ui_token: str = None , ui_address: str = None):
         super().__init__(amqp_url, queue, routing_key=routing_key)
         self.ui_token = ui_token
         self.ui_user = ui_user
-        self.md = MessageDistributor()
+        self.md = MessageDistributor(ui_user, ui_token, ui_address)
 
     def run(self):
         super().run()
@@ -40,9 +40,11 @@ def main():
     AMPQ_URL = credentials_json["AMPQ_URL"]
     ui_user = credentials_json["ui_user"]
     ui_token = credentials_json["ui_token"]
+    ui_address = "https://pht.tada5hi.net/api/"
 
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-    massage_consumer = MassageConsumer(AMPQ_URL, ui_user=ui_user, ui_token=ui_token, routing_key="en.event")
+    massage_consumer = MassageConsumer(AMPQ_URL, ui_user=ui_user, ui_token=ui_token, ui_address=ui_address,
+                                       routing_key="en.event")
 
     # static test
     sample_message_file = open("../example_message_proposal.json", "r")

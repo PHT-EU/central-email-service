@@ -1,7 +1,7 @@
 {
     "type": "proposalOperationRequired" ,
     "data": {
-        "proposalId": "1234",
+        "proposalId": "6",
         "stationId": "1"
     }
 }
