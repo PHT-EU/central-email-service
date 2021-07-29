@@ -1,7 +1,8 @@
 import json
 import smtplib, ssl
 import requests
-
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 class MessageDistributor:
     def __init__(self, ui_user, ui_token, ui_address):
@@ -36,36 +37,49 @@ class MessageDistributor:
         creator_json = self.get_user_info(proposal_json["user_id"])
 
         subject = "[PHT automatet message] " + proposal_json["title"]
-        body = self.create_proposal_body_mag(proposal_json, creator_json)
+        body_html = self.create_proposal_body_mag_html(proposal_json, creator_json)
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = self.smtp_mail_from
+        msg["To"] = self.mail_target
+        body = MIMEText(body_html, "html")
+        msg.attach(body)
 
-        msg = 'Subject: {subject}\n\n{body}'.format(subject=subject, body=body).encode('utf-8')
+
+        #msg = 'Subject: {subject}\n\n{body}'.format(subject=subject, body=body).encode('utf-8')
         #TODO later the corect resipienc have to be selectet
         self._send_email_to(self.mail_target, msg)
 
-    def create_proposal_body_mag(self, proposal_json, creator_json):
-        return """Hallo {receiver_name},
 
-{title} is a new proposal from {user_name} ({realm_name}).
-The proposal wants access to the following data "{requested_data}".
-The risk is {risk} with the assessment "{risk_comment}".
-
-Regards,
-PHT  
+    def create_proposal_body_mag_html(self, proposal_json, creator_json):
+        return """\
+<html>
+  <body>
+    <p>Hallo {receiver_name},<br>
+       <p>{title} is a new proposal from {user_name} ({realm_name}). <br>
+The proposal wants access to the following data "{requested_data}". <br>
+The risk is {risk} with the assessment "{risk_comment}". <br>
+<br>
+<p>Regards,
+<p>PHT  <br>
+    </p>
+  </body>
+</html>
                 """.format(receiver_name=self.receiver_name,
-                           title=proposal_json["title"],
-                           user_name=creator_json["display_name"],
-                           realm_name=creator_json["realm"]["name"],
-                           requested_data=proposal_json["requested_data"],
-                           risk=proposal_json["risk"],
-                           risk_comment=proposal_json["risk_comment"]
-                           )
+                               title=proposal_json["title"],
+                               user_name=creator_json["display_name"],
+                               realm_name=creator_json["realm"]["name"],
+                               requested_data=proposal_json["requested_data"],
+                               risk=proposal_json["risk"],
+                               risk_comment=proposal_json["risk_comment"]
+                               )
 
     def process_train_started(self, data):
         pass
 
     def _send_email_to(self, mail_to, msg):
         smtp_server = self._setup_smtp()
-        smtp_server.sendmail(self.smtp_mail_from, mail_to, msg)
+        smtp_server.sendmail(self.smtp_mail_from, mail_to, msg.as_string())
         smtp_server.quit()
 
     def _setup_smtp(self):
