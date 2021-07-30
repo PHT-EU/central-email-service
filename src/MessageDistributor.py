@@ -4,6 +4,7 @@ import requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+
 class MessageDistributor:
     def __init__(self, ui_user, ui_token, ui_address):
         # users = self.request_users()
@@ -26,7 +27,7 @@ class MessageDistributor:
 
     def get_proposal_info(self, id):
         get_proposal_url = self.ui_address + "proposals/" + str(id)
-        return requests.get(get_proposal_url, auth=(self.ui_user,self.ui_token)).json()
+        return requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json()
 
     def get_user_info(self, id):
         get_proposal_url = self.ui_address + "users/" + str(id)
@@ -38,6 +39,7 @@ class MessageDistributor:
 
         subject = "[PHT automatet message] " + proposal_json["title"]
         body_html = self.create_proposal_body_mag_html(proposal_json, creator_json)
+        print(body_html)
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = self.smtp_mail_from
@@ -45,34 +47,23 @@ class MessageDistributor:
         body = MIMEText(body_html, "html")
         msg.attach(body)
 
-
-        #msg = 'Subject: {subject}\n\n{body}'.format(subject=subject, body=body).encode('utf-8')
-        #TODO later the corect resipienc have to be selectet
-        self._send_email_to(self.mail_target, msg)
-
+        # msg = 'Subject: {subject}\n\n{body}'.format(subject=subject, body=body).encode('utf-8')
+        # TODO later the corect resipienc have to be selectet
+        # self._send_email_to(self.mail_target, msg)
 
     def create_proposal_body_mag_html(self, proposal_json, creator_json):
-        return """\
-<html>
-  <body>
-    <p>Hallo {receiver_name},<br>
-       <p>{title} is a new proposal from {user_name} ({realm_name}). <br>
-The proposal wants access to the following data "{requested_data}". <br>
-The risk is {risk} with the assessment "{risk_comment}". <br>
-<br>
-<p>Regards,
-<p>PHT  <br>
-    </p>
-  </body>
-</html>
-                """.format(receiver_name=self.receiver_name,
-                               title=proposal_json["title"],
-                               user_name=creator_json["display_name"],
-                               realm_name=creator_json["realm"]["name"],
-                               requested_data=proposal_json["requested_data"],
-                               risk=proposal_json["risk"],
-                               risk_comment=proposal_json["risk_comment"]
-                               )
+        with open("email_html/proposalOperationRequired_email.html", "r", encoding='utf-8') as f:
+            text = f.read()
+        html = text.format(receiver_name=self.receiver_name,
+                           title=proposal_json["title"],
+                           user_name=creator_json["display_name"],
+                           realm_name=creator_json["realm"]["name"],
+                           requested_data=proposal_json["requested_data"],
+                           risk=proposal_json["risk"],
+                           risk_comment=proposal_json["risk_comment"]
+                           )
+
+        return html
 
     def process_train_started(self, data):
         pass
