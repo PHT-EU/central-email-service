@@ -1,5 +1,5 @@
 {
-    "type": "proposalOperationRequired" ,
+    "type": "proposalApproved" ,
     "data": {
         "proposalId": "6",
         "stationId": "1"
