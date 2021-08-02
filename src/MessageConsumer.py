@@ -23,6 +23,7 @@ class MassageConsumer(Consumer):
         pass
 
     def process_message(self, msg):
+
         if msg["type"] == "proposalOperationRequired":
             self.md.process_proposal_operation_required(msg["data"])
 

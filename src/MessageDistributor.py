@@ -33,13 +33,14 @@ class MessageDistributor:
         get_proposal_url = self.ui_address + "users/" + str(id)
         return requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json()
 
+    # proposal_operation_required
+
     def process_proposal_operation_required(self, data):
         proposal_json = self.get_proposal_info(data["proposalId"])
         creator_json = self.get_user_info(proposal_json["user_id"])
 
         subject = "[PHT automatet message] " + proposal_json["title"]
-        body_html = self.create_proposal_body_mag_html(proposal_json, creator_json)
-        print(body_html)
+        body_html = self.create_proposal_operation_required_body_mag_html(proposal_json, creator_json)
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = self.smtp_mail_from
@@ -48,25 +49,31 @@ class MessageDistributor:
 
         msg.attach(body)
 
-
-        #msg = 'Subject: {subject}\n\n{body}'.format(subject=subject, body=body)
         # TODO later the corect resipienc have to be selectet
-        print(msg)
+
         self._send_email_to(self.mail_target, msg)
 
-    def create_proposal_body_mag_html(self, proposal_json, creator_json):
-        with open("../email_html/proposalOperationRequired_email.html", "r", encoding='utf-8') as f:
-            text = f.read()
-        html = text.format(receiver_name=self.receiver_name,
-                           title=proposal_json["title"],
-                           user_name=creator_json["display_name"],
-                           realm_name=creator_json["realm"]["name"],
-                           requested_data=proposal_json["requested_data"],
-                           risk=proposal_json["risk"],
-                           risk_comment=proposal_json["risk_comment"]
-                           )
+    def create_proposal_operation_required_body_mag_html(self, proposal_json, creator_json):
+        with open("../email_html/email_template.html", "r", encoding='utf-8') as f:
+            html_template = f.read()
+        text = """
+        {title} is a new proposal from {user_name} ({realm_name}).
+        The proposal wants access to the following data "{requested_data}".
+        The risk is {risk} with the assessment "{risk_comment}".
+        """
 
-        return html
+        html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
+
+        html_with_modifications = html_with_text.format(receiver_name=self.receiver_name,
+                                                        title=proposal_json["title"],
+                                                        user_name=creator_json["display_name"],
+                                                        realm_name=creator_json["realm"]["name"],
+                                                        requested_data=proposal_json["requested_data"],
+                                                        risk=proposal_json["risk"],
+                                                        risk_comment=proposal_json["risk_comment"]
+                                                        )
+
+        return html_with_modifications
 
     def process_train_started(self, data):
         pass
