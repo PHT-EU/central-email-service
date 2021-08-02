@@ -45,14 +45,17 @@ class MessageDistributor:
         msg["From"] = self.smtp_mail_from
         msg["To"] = self.mail_target
         body = MIMEText(body_html, "html")
+
         msg.attach(body)
 
-        # msg = 'Subject: {subject}\n\n{body}'.format(subject=subject, body=body).encode('utf-8')
+
+        #msg = 'Subject: {subject}\n\n{body}'.format(subject=subject, body=body)
         # TODO later the corect resipienc have to be selectet
-        # self._send_email_to(self.mail_target, msg)
+        print(msg)
+        self._send_email_to(self.mail_target, msg)
 
     def create_proposal_body_mag_html(self, proposal_json, creator_json):
-        with open("email_html/proposalOperationRequired_email.html", "r", encoding='utf-8') as f:
+        with open("../email_html/proposalOperationRequired_email.html", "r", encoding='utf-8') as f:
             text = f.read()
         html = text.format(receiver_name=self.receiver_name,
                            title=proposal_json["title"],

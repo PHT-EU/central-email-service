@@ -25,22 +25,31 @@ class MassageConsumer(Consumer):
     def process_message(self, msg):
         if msg["type"] == "proposalOperationRequired":
             self.md.process_proposal_operation_required(msg["data"])
+
         elif msg["type"] == "proposalApproved":
-            pass
+            self.md.process_proposal_approved(msg["data"])
+
         elif msg["type"] == "trainStarted":
             self.md.process_train_started(msg["data"])
+
         elif msg["type"] == "trainApproved":
-            pass
+            self.md.process_train_approved(msg["data"])
+
         elif msg["type"] == "trainBuilt":
-            pass
+            self.md.process_train_built(msg["data"])
+
         elif msg["type"] == "trainFinished":
-            pass
+            self.md.process_train_finished(msg["data"])
+
         elif msg["type"] == "trainFailed":
-            pass
+            self.md.process_train_failed(msg["data"])
+
         elif msg["type"] == "trainReceived":
-            pass
+            self.md.process_train_received(msg["data"])
+
         elif msg["type"] == "trainOperationRequired":
-            pass
+            self.md.process_train_operation_required(msg["data"])
+
         else:
             LOGGER.info(f"Invalid event {msg['type']}")
 
