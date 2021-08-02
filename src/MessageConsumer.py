@@ -71,7 +71,7 @@ def main():
                                        routing_key="en.event")
 
     # static test
-    sample_message_file = open("../example_message_proposal.json", "r")
+    sample_message_file = open("../example_message_trainStarted.json", "r")
     sample_message_json = json.load(sample_message_file)
     pprint_json(sample_message_json)
     massage_consumer.process_message(sample_message_json)

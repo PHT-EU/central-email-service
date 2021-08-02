@@ -17,13 +17,14 @@ class MessageDistributor:
         self.smtp_mail_from = "pht@medizin.uni-tuebingen.de"
         self.port = 587
         self.smtp_host = "smtpserv.uni-tuebingen.de"
-
+        self.html_template_path = "../email_html/email_template.html"
         self.ui_user = ui_user
         self.ui_token = ui_token
         self.ui_address = ui_address
 
         self.mail_target = "david.hieber@uni-tuebingen.de"
         self.receiver_name = "David"
+
 
     def get_proposal_info(self, id):
         get_proposal_url = self.ui_address + "proposals/" + str(id)
@@ -39,23 +40,23 @@ class MessageDistributor:
         proposal_json = self.get_proposal_info(data["proposalId"])
         creator_json = self.get_user_info(proposal_json["user_id"])
 
-        subject = "[PHT automatet message] " + proposal_json["title"]
-        body_html = self.create_proposal_operation_required_body_mag_html(proposal_json, creator_json)
+        subject = "[PHT automatet message]  operation required for proposal " + proposal_json["title"]
+        body_html = self._create_proposal_operation_required_body_mag_html(proposal_json, creator_json)
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = self.smtp_mail_from
+        # TODO later the corect resipienc have to be selectet
         msg["To"] = self.mail_target
         body = MIMEText(body_html, "html")
 
         msg.attach(body)
 
         # TODO later the corect resipienc have to be selectet
-
         self._send_email_to(self.mail_target, msg)
 
-    def create_proposal_operation_required_body_mag_html(self, proposal_json, creator_json):
-        with open("../email_html/email_template.html", "r", encoding='utf-8') as f:
-            html_template = f.read()
+    def _create_proposal_operation_required_body_mag_html(self, proposal_json, creator_json):
+        html_template = self._load_html_template()
+
         text = """
         {title} is a new proposal from {user_name} ({realm_name}).
         The proposal wants access to the following data "{requested_data}".
@@ -76,7 +77,31 @@ class MessageDistributor:
         return html_with_modifications
 
     def process_train_started(self, data):
-        pass
+        proposal_json = self.get_proposal_info(data["proposalId"])
+
+        subject = "[PHT automatet message] Train " + data["trainId"] + " started"
+        body_html = self._create_train_started_body_mag_html(proposal_json, data)
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = self.smtp_mail_from
+        msg["To"] = self.mail_target
+        body = MIMEText(body_html, "html")
+        msg.attach(body)
+
+        self._send_email_to(self.mail_target, msg)
+
+    def _create_train_started_body_mag_html(self,proposal_json,data):
+        html_template = self._load_html_template()
+        text = """
+                The Train {train_name} from the proposal "{proposal_name}" has started.  
+                """
+        html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
+
+        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+                                                        proposal_name=proposal_json["title"]
+                                                        )
+
+        return html_with_modifications
 
     def _send_email_to(self, mail_to, msg):
         smtp_server = self._setup_smtp()
@@ -95,6 +120,10 @@ class MessageDistributor:
             return None
         return server
 
+    def _load_html_template(self):
+        with open(self.html_template_path, "r", encoding='utf-8') as f:
+            html_template = f.read()
+        return html_template
     class User:
         def __init__(self):
             self.name = ""
