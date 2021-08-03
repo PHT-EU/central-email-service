@@ -1,8 +1,10 @@
 import json
-import smtplib, ssl
-import requests
-from email.mime.text import MIMEText
+import smtplib
+import ssl
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+import requests
 
 
 class MessageDistributor:
@@ -231,6 +233,11 @@ class MessageDistributor:
     # helper functions
 
     def _send_email_to(self, msg):
+        """
+        Send an email message.
+        :param msg:
+        :return:
+        """
         smtp_server = self._setup_smtp()
         smtp_server.sendmail(self.smtp_mail_from, msg["To"], msg.as_string())
         smtp_server.quit()
