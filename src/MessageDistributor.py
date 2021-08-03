@@ -25,19 +25,11 @@ class MessageDistributor:
         self.mail_target = "david.hieber@uni-tuebingen.de"
         self.receiver_name = "David"
 
-    def get_proposal_info(self, proposal_id):
-        get_proposal_url = self.ui_address + "proposals/" + str(proposal_id)
-        return requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json()
-
-    def get_user_info(self, user_id):
-        get_proposal_url = self.ui_address + "users/" + str(user_id)
-        return requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json()
-
     # proposal_operation_required
 
     def process_proposal_operation_required(self, data):
-        proposal_json = self.get_proposal_info(data["proposalId"])
-        creator_json = self.get_user_info(proposal_json["user_id"])
+        proposal_json = self._get_proposal_info(data["proposalId"])
+        creator_json = self._get_user_info(proposal_json["user_id"])
 
         subject = "[PHT automated message]  operation required for proposal " + proposal_json["title"]
         body_html = self._create_proposal_operation_required_body_html(proposal_json, creator_json)
@@ -69,8 +61,8 @@ class MessageDistributor:
     # process_proposal_approved
 
     def process_proposal_approved(self, data):
-        proposal_json = self.get_proposal_info(data["proposalId"])
-        creator_json = self.get_user_info(proposal_json["user_id"])
+        proposal_json = self._get_proposal_info(data["proposalId"])
+        creator_json = self._get_user_info(proposal_json["user_id"])
 
         subject = "[PHT automated message] proposal approved " + proposal_json["title"]
         body_html = self._create_proposal_approved_body_html(proposal_json, creator_json)
@@ -91,14 +83,14 @@ class MessageDistributor:
     # train_started
 
     def process_train_started(self, data):
-        proposal_json = self.get_proposal_info(data["proposalId"])
+        proposal_json = self._get_proposal_info(data["proposalId"])
 
         subject = "[PHT automated message] Train " + data["trainId"] + " started"
-        body_html = self._create_train_started_body_html(proposal_json, data)
+        body_html = self._create_train_started_body_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
-    def _create_train_started_body_html(self, proposal_json, data):
+    def _create_train_started_body_html(self, data, proposal_json):
         html_template = self._load_html_template()
         text = """
                 The train {train_name} from the proposal "{proposal_name}" has started.  
@@ -114,9 +106,9 @@ class MessageDistributor:
     # process_train_approved
 
     def process_train_approved(self, data):
-        proposal_json = self.get_proposal_info(data["proposalId"])
+        proposal_json = self._get_proposal_info(data["proposalId"])
         subject = "[PHT automated message] Train " + data["trainId"] + " was approved"
-        body_html = self._create_train_approved_html(data,proposal_json)
+        body_html = self._create_train_approved_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
@@ -131,6 +123,112 @@ class MessageDistributor:
                                                         proposal_name=proposal_json["title"]
                                                         )
         return html_with_modifications
+
+    # train_built
+
+    def process_train_built(self, data):
+        proposal_json = self._get_proposal_info(data["proposalId"])
+        subject = "[PHT automated message] Train " + data["trainId"] + " was built"
+        body_html = self._create_train_built_html(data, proposal_json)
+        msg = self._build_msg(subject, body_html)
+        self._send_email_to(msg)
+
+    def _create_train_built_html(self, data, proposal_json):
+        html_template = self._load_html_template()
+        text = """
+                        The train {train_name} from the proposal {proposal_name} was approved.
+                        """
+        html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
+
+        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+                                                        proposal_name=proposal_json["title"]
+                                                        )
+        return html_with_modifications
+
+    # train_finished
+
+    def process_train_finished(self, data):
+        proposal_json = self._get_proposal_info(data["proposalId"])
+        subject = "[PHT automated message] Train " + data["trainId"] + " is finished"
+        body_html = self._create_train_finished_html(data, proposal_json)
+        msg = self._build_msg(subject, body_html)
+        self._send_email_to(msg)
+
+    def _create_train_finished_html(self, data, proposal_json):
+        html_template = self._load_html_template()
+        text = """
+                        The train {train_name} from the proposal {proposal_name} is finished.
+                        """
+        html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
+
+        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+                                                        proposal_name=proposal_json["title"]
+                                                        )
+        return html_with_modifications
+
+    # train_failed
+
+    def process_train_failed(self, data):
+        proposal_json = self._get_proposal_info(data["proposalId"])
+        subject = "[PHT automated message] Train " + data["trainId"] + " is finished"
+        body_html = self._create_train_failed_html(data, proposal_json)
+        msg = self._build_msg(subject, body_html)
+        self._send_email_to(msg)
+
+    def _create_train_failed_html(self, data, proposal_json):
+        html_template = self._load_html_template()
+        text = """
+                        The train {train_name} from the proposal {proposal_name} is failed.
+                        """
+        html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
+
+        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+                                                        proposal_name=proposal_json["title"]
+                                                        )
+        return html_with_modifications
+
+    # train_received
+
+    def process_train_received(self, data):
+        proposal_json = self._get_proposal_info(data["proposalId"])
+        subject = "[PHT automated message] New train from " + proposal_json["title"]
+        body_html = self._create_train_received_html(data, proposal_json)
+        msg = self._build_msg(subject, body_html)
+        self._send_email_to(msg)
+
+    def _create_train_received_html(self, data, proposal_json):
+        html_template = self._load_html_template()
+        text = """There is a new train from the proposal {proposal_name}  with the train id {train_name}  that has to be 
+        checked. """
+        html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
+
+        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+                                                        proposal_name=proposal_json["title"]
+                                                        )
+        return html_with_modifications
+
+    # train_operation_required
+
+    def process_train_operation_required(self, data):
+        proposal_json = self._get_proposal_info(data["proposalId"])
+        subject = "[PHT automated message] operation required for train " + data["trainId"]
+        body_html = self._create_train_operation_required_html(data, proposal_json)
+        msg = self._build_msg(subject, body_html)
+        self._send_email_to(msg)
+
+    def _create_train_operation_required_html(self, data, proposal_json):
+        html_template = self._load_html_template()
+        text = """
+                                The train {train_name} from the proposal {proposal_name} was requires some operation.
+                                """
+        html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
+
+        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+                                                        proposal_name=proposal_json["title"]
+                                                        )
+        return html_with_modifications
+
+    # helper functions
 
     def _send_email_to(self, msg):
         smtp_server = self._setup_smtp()
@@ -163,6 +261,14 @@ class MessageDistributor:
         body = MIMEText(body_html, "html")
         msg.attach(body)
         return msg
+
+    def _get_proposal_info(self, proposal_id):
+        get_proposal_url = self.ui_address + "proposals/" + str(proposal_id)
+        return requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json()
+
+    def _get_user_info(self, user_id):
+        get_proposal_url = self.ui_address + "users/" + str(user_id)
+        return requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json()
 
     class User:
         def __init__(self):
