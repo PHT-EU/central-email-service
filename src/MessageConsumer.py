@@ -10,17 +10,29 @@ LOGGER = logging.getLogger(__name__)
 
 class MassageConsumer(Consumer):
     def __init__(self, amqp_url: str, queue: str = "", routing_key: str = None, ui_user: str = None,
-                 ui_token: str = None , ui_address: str = None):
+                 ui_token: str = None, ui_address: str = None):
         super().__init__(amqp_url, queue, routing_key=routing_key)
         self.ui_token = ui_token
         self.ui_user = ui_user
+
         self.md = MessageDistributor(ui_user, ui_token, ui_address)
+
+        # Set auto reconnect to true
+        self.auto_reconnect = True
+
 
     def run(self):
         super().run()
 
     def on_message(self, _unused_channel, basic_deliver, properties, body):
-        pass
+        try:
+            message = json.loads(body)
+            pprint_json(message)
+        except:
+            LOGGER.error("Malformed json input")
+            super().on_message(_unused_channel, basic_deliver, properties, body)
+        self.process_message(message)
+        super().on_message(_unused_channel, basic_deliver, properties, body)
 
     def process_message(self, msg):
 
@@ -69,12 +81,13 @@ def main():
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
     massage_consumer = MassageConsumer(AMPQ_URL, ui_user=ui_user, ui_token=ui_token, ui_address=ui_address,
                                        routing_key="en.event")
+    massage_consumer.run()
 
     # static test
-    sample_message_file = open("../example_message_proposal.json", "r")
-    sample_message_json = json.load(sample_message_file)
-    pprint_json(sample_message_json)
-    massage_consumer.process_message(sample_message_json)
+    # sample_message_file = open("../example_message_trainStarted.json", "r")
+    # sample_message_json = json.load(sample_message_file)
+    # pprint_json(sample_message_json)
+    # massage_consumer.process_message(sample_message_json)
 
 
 def pprint_json(data):
