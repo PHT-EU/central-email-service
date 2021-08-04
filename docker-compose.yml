@@ -1,10 +1,12 @@
 version: '3.8'
 services:
-  train_router:
+  pht-email-service:
     build: .
-    env_file:
-      - .env
-  redis:
-      image: "redis:alpine"
-      ports:
-        - 6379:6379
+    environment:
+      - UI_TRAIN_API=
+      - AMPQ_URL=
+      - SMTP_USER=
+      - SMTP_PASSWORD=
+      - UI_USER=
+      - UI_TOKEN=
+      - UI_ADDRESS=

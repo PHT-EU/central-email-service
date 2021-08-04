@@ -1,4 +1,5 @@
 import json
+import os
 
 from train_lib.clients import Consumer
 from train_lib.clients.rabbitmq import LOG_FORMAT
@@ -19,7 +20,6 @@ class MassageConsumer(Consumer):
 
         # Set auto reconnect to true
         self.auto_reconnect = True
-
 
     def run(self):
         super().run()
@@ -68,26 +68,25 @@ class MassageConsumer(Consumer):
 
 
 def main():
-    # TODO login parameters only for developing later in docker -compose as env varibals
-    # only for testign later with os.getenv("smtp_user") etc , ,..
-    login_credentials_file = open("../static_setup.json", "r")
-    credentials_json = json.load(login_credentials_file)
-
-    AMPQ_URL = credentials_json["AMPQ_URL"]
-    ui_user = credentials_json["ui_user"]
-    ui_token = credentials_json["ui_token"]
-    ui_address = "https://pht.tada5hi.net/api/"
+    docker = True
+    if not docker:
+        login_credentials_file = open("../static_setup.json", "r")
+        credentials_json = json.load(login_credentials_file)
+        AMPQ_URL = credentials_json["AMPQ_URL"]
+        ui_user = credentials_json["ui_user"]
+        ui_token = credentials_json["ui_token"]
+        ui_address = "https://pht.tada5hi.net/api/"
+    else:
+        AMPQ_URL = os.getenv("AMPQ_URL")
+        ui_user = os.getenv("UI_USER")
+        ui_token = os.getenv("UI_TOKEN")
+        ui_address = os.getenv("UI_ADDRESS")
 
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
     massage_consumer = MassageConsumer(AMPQ_URL, ui_user=ui_user, ui_token=ui_token, ui_address=ui_address,
                                        routing_key="en.event")
     massage_consumer.run()
 
-    # static test
-    # sample_message_file = open("../example_message_trainStarted.json", "r")
-    # sample_message_json = json.load(sample_message_file)
-    # pprint_json(sample_message_json)
-    # massage_consumer.process_message(sample_message_json)
 
 
 def pprint_json(data):

@@ -3,29 +3,36 @@ import smtplib
 import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
+import os
 import requests
 
 
 class MessageDistributor:
     def __init__(self, ui_user, ui_token, ui_address):
-        # users = self.request_users()
-        # TODO send emails to spesific users , for know send only to me for testing
-        # only for testign later with os.getenv("smtp_user") etc , ,..
-        login_credentials_file = open("../static_setup.json", "r")
-        credentials_json = json.load(login_credentials_file)
-        self.smtp_user = credentials_json["smtp_user"]
-        self.smtp_password = credentials_json["smtp_password"]
+        docker = True
+        if not docker:
+            login_credentials_file = open("../static_setup.json", "r")
+            credentials_json = json.load(login_credentials_file)
+            self.smtp_user = credentials_json["smtp_user"]
+            self.smtp_password = credentials_json["smtp_password"]
+        else:
+            self.smtp_user = os.getenv("SMTP_USER")
+            self.smtp_password = os.getenv("SMTP_PASSWORD")
+
         self.smtp_mail_from = "pht@medizin.uni-tuebingen.de"
         self.port = 587
         self.smtp_host = "smtpserv.uni-tuebingen.de"
-        self.html_template_path = "../email_html/email_template.html"
+        if not docker:
+            self.html_template_path = "email_template.html"
+        else:
+            self.html_template_path = "/opt/pht-email-service/src/email_template.html"
         self.ui_user = ui_user
         self.ui_token = ui_token
         self.ui_address = ui_address
 
         self.mail_target = "david.hieber@uni-tuebingen.de"
         self.receiver_name = "David"
+        print(self.ui_address)
 
     # proposal_operation_required
 
@@ -249,8 +256,13 @@ class MessageDistributor:
             server.starttls(context=context)
             server.login(self.smtp_user, self.smtp_password)
         except Exception as e:
+
             print(e)
             print("connection could be established")
+            print(self.smtp_host)
+            print(self.port)
+            print(self.smtp_user)
+            print(self.smtp_password)
             return None
         return server
 
