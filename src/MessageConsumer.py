@@ -10,13 +10,18 @@ LOGGER = logging.getLogger(__name__)
 
 
 class MassageConsumer(Consumer):
-    def __init__(self, amqp_url: str, queue: str = "", routing_key: str = None, ui_user: str = None,
-                 ui_token: str = None, ui_address: str = None):
-        super().__init__(amqp_url, queue, routing_key=routing_key)
-        self.ui_token = ui_token
-        self.ui_user = ui_user
 
-        self.md = MessageDistributor(ui_user, ui_token, ui_address)
+    def __init__(self, amqp_url: str, queue: str = "", routing_key: str = None):
+        """
+        MassageConsumer is a child class of Consumer from the train liberty.
+        MassageConsumer listening for rabbitmq messages and calls the corresponding MessageDistributor
+        :param amqp_url: the addres of the rabbitmq service
+        :param queue:
+        :param routing_key: only messages with this key get processed
+        """
+        super().__init__(amqp_url, queue, routing_key=routing_key)
+
+        self.md = MessageDistributor()
 
         # Set auto reconnect to true
         self.auto_reconnect = True
@@ -25,17 +30,31 @@ class MassageConsumer(Consumer):
         super().run()
 
     def on_message(self, _unused_channel, basic_deliver, properties, body):
+        """
+        on_message defines the behavior at massages.
+        Tries to load the body as json; if this is not possible, log the event.
+        Calls process_message to interpret the massage.
+        Acknowledges the massage using the parent on_message function.
+        :param _unused_channel:
+        :param basic_deliver:
+        :param properties:
+        :param body:
+        :return:
+        """
         try:
             message = json.loads(body)
-            pprint_json(message)
         except:
             LOGGER.error("Malformed json input")
             super().on_message(_unused_channel, basic_deliver, properties, body)
         self.process_message(message)
         super().on_message(_unused_channel, basic_deliver, properties, body)
 
-    def process_message(self, msg):
-
+    def process_message(self, msg: dict):
+        """
+        process_message selects the corresponding function in MessageDistributor to the massage type.
+        :param msg: the json massage with type and data as attributes
+        :return:
+        """
         if msg["type"] == "proposalOperationRequired":
             self.md.process_proposal_operation_required(msg["data"])
 
@@ -68,28 +87,21 @@ class MassageConsumer(Consumer):
 
 
 def main():
-    docker = True
-    if not docker:
-        login_credentials_file = open("../static_setup.json", "r")
-        credentials_json = json.load(login_credentials_file)
-        AMPQ_URL = credentials_json["AMPQ_URL"]
-        ui_user = credentials_json["ui_user"]
-        ui_token = credentials_json["ui_token"]
-        ui_address = "https://pht.tada5hi.net/api/"
-    else:
-        AMPQ_URL = os.getenv("AMPQ_URL")
-        ui_user = os.getenv("UI_USER")
-        ui_token = os.getenv("UI_TOKEN")
-        ui_address = os.getenv("UI_ADDRESS")
+
+    ampq_url = os.getenv("AMPQ_URL")
 
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-    massage_consumer = MassageConsumer(AMPQ_URL, ui_user=ui_user, ui_token=ui_token, ui_address=ui_address,
-                                       routing_key="en.event")
+
+    massage_consumer = MassageConsumer(ampq_url, routing_key="en.event")
     massage_consumer.run()
 
 
-
 def pprint_json(data):
+    """
+    helper funktion that prints json in a readabel format
+    :param data: json data
+    :return:
+    """
     print(json.dumps(data, indent=2, sort_keys=True))
 
 

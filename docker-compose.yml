@@ -10,3 +10,5 @@ services:
       - UI_USER=
       - UI_TOKEN=
       - UI_ADDRESS=
+      - SMTP_MAIL_FROM=
+      - SMTP_HOST=

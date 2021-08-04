@@ -8,35 +8,41 @@ import requests
 
 
 class MessageDistributor:
-    def __init__(self, ui_user, ui_token, ui_address):
-        docker = True
-        if not docker:
-            login_credentials_file = open("../static_setup.json", "r")
-            credentials_json = json.load(login_credentials_file)
-            self.smtp_user = credentials_json["smtp_user"]
-            self.smtp_password = credentials_json["smtp_password"]
-        else:
-            self.smtp_user = os.getenv("SMTP_USER")
-            self.smtp_password = os.getenv("SMTP_PASSWORD")
-
-        self.smtp_mail_from = "pht@medizin.uni-tuebingen.de"
+    def __init__(self):
+        """
+            MessageDistributor has Funktion for possible event massages from the PHT UI
+            and sends emails out to the relevant addresses.
+        """
+        # Define mail connection
+        self.smtp_user = os.getenv("SMTP_USER")
+        self.smtp_password = os.getenv("SMTP_PASSWORD")
+        self.smtp_mail_from = os.getenv("SMTP_MAIL_FROM")
+        self.smtp_host = os.getenv("SMTP_HOST")
         self.port = 587
-        self.smtp_host = "smtpserv.uni-tuebingen.de"
-        if not docker:
-            self.html_template_path = "email_template.html"
-        else:
-            self.html_template_path = "/opt/pht-email-service/src/email_template.html"
-        self.ui_user = ui_user
-        self.ui_token = ui_token
-        self.ui_address = ui_address
 
+        # path to the mail template
+        self.html_template_path = "/opt/pht-email-service/src/email_template.html"
+
+        # Define the UI api connection
+        self.ui_user = os.getenv("UI_USER")
+        self.ui_token = os.getenv("UI_TOKEN")
+        self.ui_address = os.getenv("UI_ADDRESS")
+
+        # target mail
         self.mail_target = "david.hieber@uni-tuebingen.de"
         self.receiver_name = "David"
-        print(self.ui_address)
 
     # proposal_operation_required
 
-    def process_proposal_operation_required(self, data):
+    def process_proposal_operation_required(self, data: dict):
+        """
+        Processing the message of type proposalOperationRequired
+        by loading more information using the UI API using the proposalId,
+        and using the returned user_id to get information about the proposal's creator.
+        Using this information, an email subject and body are created and send out.
+        :param data: dict with the fields "proposalId" ,"stationId"
+        :return:
+        """
         proposal_json = self._get_proposal_info(data["proposalId"])
         creator_json = self._get_user_info(proposal_json["user_id"])
 
@@ -45,7 +51,13 @@ class MessageDistributor:
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
-    def _create_proposal_operation_required_body_html(self, proposal_json, creator_json):
+    def _create_proposal_operation_required_body_html(self, proposal_json: dict, creator_json: dict) -> str:
+        """
+
+        :param proposal_json: dict with information of the proposal
+        :param creator_json:  dict with information about the person that created the proposal
+        :return: The mail body as a html string
+        """
         html_template = self._load_html_template()
 
         text = """
@@ -69,7 +81,7 @@ class MessageDistributor:
 
     # process_proposal_approved
 
-    def process_proposal_approved(self, data):
+    def process_proposal_approved(self, data: dict):
         proposal_json = self._get_proposal_info(data["proposalId"])
         creator_json = self._get_user_info(proposal_json["user_id"])
 
@@ -78,7 +90,7 @@ class MessageDistributor:
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
-    def _create_proposal_approved_body_html(self, proposal_json, creator_json):
+    def _create_proposal_approved_body_html(self, proposal_json: dict, creator_json: dict) -> str:
         html_template = self._load_html_template()
         text = """
                 The proposal {proposal_name} from the realm {realm_name} was approved.
@@ -91,7 +103,7 @@ class MessageDistributor:
 
     # train_started
 
-    def process_train_started(self, data):
+    def process_train_started(self, data: dict):
         proposal_json = self._get_proposal_info(data["proposalId"])
 
         subject = "[PHT automated message] Train " + data["trainId"] + " started"
@@ -99,7 +111,7 @@ class MessageDistributor:
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
-    def _create_train_started_body_html(self, data, proposal_json):
+    def _create_train_started_body_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
                 The train {train_name} from the proposal "{proposal_name}" has started.  
@@ -114,14 +126,14 @@ class MessageDistributor:
 
     # process_train_approved
 
-    def process_train_approved(self, data):
+    def process_train_approved(self, data: dict):
         proposal_json = self._get_proposal_info(data["proposalId"])
         subject = "[PHT automated message] Train " + data["trainId"] + " was approved"
         body_html = self._create_train_approved_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
-    def _create_train_approved_html(self, data, proposal_json):
+    def _create_train_approved_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
                         The train {train_name} from the proposal {proposal_name} was approved.
@@ -135,14 +147,14 @@ class MessageDistributor:
 
     # train_built
 
-    def process_train_built(self, data):
+    def process_train_built(self, data: dict):
         proposal_json = self._get_proposal_info(data["proposalId"])
         subject = "[PHT automated message] Train " + data["trainId"] + " was built"
         body_html = self._create_train_built_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
-    def _create_train_built_html(self, data, proposal_json):
+    def _create_train_built_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
                         The train {train_name} from the proposal {proposal_name} was approved.
@@ -156,14 +168,14 @@ class MessageDistributor:
 
     # train_finished
 
-    def process_train_finished(self, data):
+    def process_train_finished(self, data: dict):
         proposal_json = self._get_proposal_info(data["proposalId"])
         subject = "[PHT automated message] Train " + data["trainId"] + " is finished"
         body_html = self._create_train_finished_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
-    def _create_train_finished_html(self, data, proposal_json):
+    def _create_train_finished_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
                         The train {train_name} from the proposal {proposal_name} is finished.
@@ -177,14 +189,14 @@ class MessageDistributor:
 
     # train_failed
 
-    def process_train_failed(self, data):
+    def process_train_failed(self, data: dict):
         proposal_json = self._get_proposal_info(data["proposalId"])
         subject = "[PHT automated message] Train " + data["trainId"] + " is finished"
         body_html = self._create_train_failed_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
-    def _create_train_failed_html(self, data, proposal_json):
+    def _create_train_failed_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
                         The train {train_name} from the proposal {proposal_name} is failed.
@@ -198,14 +210,14 @@ class MessageDistributor:
 
     # train_received
 
-    def process_train_received(self, data):
+    def process_train_received(self, data: dict):
         proposal_json = self._get_proposal_info(data["proposalId"])
         subject = "[PHT automated message] New train from " + proposal_json["title"]
         body_html = self._create_train_received_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
-    def _create_train_received_html(self, data, proposal_json):
+    def _create_train_received_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """There is a new train from the proposal {proposal_name}  with the train id {train_name}  that has to be 
         checked. """
@@ -218,14 +230,14 @@ class MessageDistributor:
 
     # train_operation_required
 
-    def process_train_operation_required(self, data):
+    def process_train_operation_required(self, data: dict):
         proposal_json = self._get_proposal_info(data["proposalId"])
         subject = "[PHT automated message] operation required for train " + data["trainId"]
         body_html = self._create_train_operation_required_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
-    def _create_train_operation_required_html(self, data, proposal_json):
+    def _create_train_operation_required_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
                                 The train {train_name} from the proposal {proposal_name} was requires some operation.
@@ -239,7 +251,7 @@ class MessageDistributor:
 
     # helper functions
 
-    def _send_email_to(self, msg):
+    def _send_email_to(self, msg: MIMEMultipart):
         """
         Send an email message.
         :param msg:
@@ -249,7 +261,7 @@ class MessageDistributor:
         smtp_server.sendmail(self.smtp_mail_from, msg["To"], msg.as_string())
         smtp_server.quit()
 
-    def _setup_smtp(self):
+    def _setup_smtp(self) -> smtplib.SMTP:
         context = ssl.create_default_context()
         try:
             server = smtplib.SMTP(self.smtp_host, self.port)
@@ -266,12 +278,12 @@ class MessageDistributor:
             return None
         return server
 
-    def _load_html_template(self):
+    def _load_html_template(self) -> str:
         with open(self.html_template_path, "r", encoding='utf-8') as f:
             html_template = f.read()
         return html_template
 
-    def _build_msg(self, subject, body_html):
+    def _build_msg(self, subject: str, body_html: str) -> MIMEMultipart:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = self.smtp_mail_from
@@ -281,22 +293,14 @@ class MessageDistributor:
         msg.attach(body)
         return msg
 
-    def _get_proposal_info(self, proposal_id):
+    def _get_proposal_info(self, proposal_id: int) -> dict:
         get_proposal_url = self.ui_address + "proposals/" + str(proposal_id)
         return requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json()
 
-    def _get_user_info(self, user_id):
+    def _get_user_info(self, user_id: int) -> dict:
         get_proposal_url = self.ui_address + "users/" + str(user_id)
         return requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json()
 
-    class User:
-        def __init__(self):
-            self.name = ""
-            self.email = ""
-            self.realm = ""
-            self.send_mail_on_new_train = False
-            self.send_mail_on_new_redy_to_build = False
 
-
-def pprint_json(data):
+def pprint_json(data: dict):
     print(json.dumps(data, indent=2, sort_keys=True))
