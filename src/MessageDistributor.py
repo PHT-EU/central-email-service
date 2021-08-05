@@ -10,7 +10,7 @@ import requests
 class MessageDistributor:
     def __init__(self):
         """
-            MessageDistributor has Funktion for possible event massages from the PHT UI
+            MessageDistributor has Function for possible event massages from the PHT UI
             and sends emails out to the relevant addresses.
         """
         # Define mail connection
@@ -262,6 +262,10 @@ class MessageDistributor:
         smtp_server.quit()
 
     def _setup_smtp(self) -> smtplib.SMTP:
+        """
+        create conception to smtp server
+        :return:
+        """
         context = ssl.create_default_context()
         try:
             server = smtplib.SMTP(self.smtp_host, self.port)
@@ -279,11 +283,21 @@ class MessageDistributor:
         return server
 
     def _load_html_template(self) -> str:
+        """
+        loads the tamplate that gets used for the emails
+        :return: the html as a sting
+        """
         with open(self.html_template_path, "r", encoding='utf-8') as f:
             html_template = f.read()
         return html_template
 
     def _build_msg(self, subject: str, body_html: str) -> MIMEMultipart:
+        """
+        fils in the relevant fields for a MIMEMultipart and retruns it
+        :param subject:
+        :param body_html:
+        :return:
+        """
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = self.smtp_mail_from
