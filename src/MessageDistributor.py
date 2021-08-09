@@ -32,6 +32,10 @@ class MessageDistributor:
         self.mail_target = "david.hieber@uni-tuebingen.de"
         self.receiver_name = "David"
 
+        # links to the UI pages
+        self.proposal_link = "https://pht.tada5hi.net/proposals/"
+        self.train_link = "https://pht.tada5hi.net/trains/"
+
     # proposal_operation_required
 
     def process_proposal_operation_required(self, data: dict):
@@ -60,15 +64,15 @@ class MessageDistributor:
         """
         html_template = self._load_html_template()
 
-        text = """
-        {title} is a new proposal from {user_name} ({realm_name}).
-        The proposal wants access to the following data "{requested_data}".
-        The risk is {risk} with the assessment "{risk_comment}".
-        """
+        text = """{title} is a new <a href="{proposal_link}{proposalID}" target="_blank">proposal</a> from 
+        {user_name} ({realm_name}). The proposal wants access to the following data "{requested_data}". 
+        The risk is {risk} with the assessment "{risk_comment}". """
 
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
-
+        pprint_json(proposal_json)
         html_with_modifications = html_with_text.format(receiver_name=self.receiver_name,
+                                                        proposal_link=self.proposal_link,
+                                                        proposalID=proposal_json["id"],
                                                         title=proposal_json["title"],
                                                         user_name=creator_json["display_name"],
                                                         realm_name=creator_json["realm"]["name"],
