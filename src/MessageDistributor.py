@@ -64,9 +64,10 @@ class MessageDistributor:
         """
         html_template = self._load_html_template()
 
-        text = """<a href="{proposal_link}{proposalID}" target="_blank">{title}</a> is a new proposal from 
+        text = """{title} is a new proposal from 
         {user_name} ({realm_name}). The proposal wants access to the following data "{requested_data}". 
-        The risk is {risk} with the assessment "{risk_comment}". """
+        The risk is {risk} with the assessment "{risk_comment}".
+        <br> link {proposal_link}{proposalID} """
 
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
         html_with_modifications = html_with_text.format(receiver_name=self.receiver_name,
@@ -95,8 +96,9 @@ class MessageDistributor:
 
     def _create_proposal_approved_body_html(self, proposal_json: dict, creator_json: dict) -> str:
         html_template = self._load_html_template()
-        text = """The proposal <a href="{proposal_link}{proposalID}" target="_blank">{proposal_name}</a> from the 
-        realm {realm_name} was approved. """
+        text = """The proposal {proposal_name} from the 
+        realm {realm_name} was approved. 
+        <br>link {proposal_link}{proposalID}"""
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
         html_with_modifications = html_with_text.format(proposal_name=proposal_json["title"],
@@ -119,8 +121,9 @@ class MessageDistributor:
     def _create_train_started_body_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
-                The train <a href="{train_link}{train_name}" target="_blank">{train_name}</a> from the
+                The train {train_name} from the
                 proposal "{proposal_name}" has started.  
+                <br>link {train_link}{train_name}
                 """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
@@ -143,8 +146,9 @@ class MessageDistributor:
     def _create_train_approved_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
-                        The train <a href="{train_link}{train_name}" target="_blank">{train_name}</a> from the proposal
+                        The train {train_name} from the proposal
                          {proposal_name} was approved.
+                         <br>link {train_link}{train_name}
                         """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
@@ -166,8 +170,9 @@ class MessageDistributor:
     def _create_train_built_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
-                        The train <a href="{train_link}{train_name}" target="_blank">{train_name}</a> from 
+                        The train {train_name} from 
                         the proposal {proposal_name} was built.
+                        <br>link {train_link}{train_name}
                         """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
@@ -189,8 +194,9 @@ class MessageDistributor:
     def _create_train_finished_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
-                        The train <a href="{train_link}{train_name}" target="_blank">{train_name}</a> from
+                        The train {train_name}from
                          the proposal {proposal_name} is finished.
+                         <br>link {train_link}{train_name}
                         """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
@@ -204,7 +210,7 @@ class MessageDistributor:
 
     def process_train_failed(self, data: dict):
         proposal_json = self._get_proposal_info(data["proposalId"])
-        subject = "[PHT automated message] Train " + data["trainId"] + " is finished"
+        subject = "[PHT automated message] Train " + data["trainId"] + " is failed"
         body_html = self._create_train_failed_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
@@ -212,8 +218,9 @@ class MessageDistributor:
     def _create_train_failed_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
-                        The train <a href="{train_link}{train_name}" target="_blank">{train_name}</a> from 
+                        The train {train_name} from 
                         the proposal {proposal_name} is failed.
+                        <br>link {train_link}{train_name}
                         """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
@@ -235,8 +242,9 @@ class MessageDistributor:
     def _create_train_received_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """There is a new train from the proposal {proposal_name}  with the train id 
-        <a href="{train_link}{train_name}" target="_blank">{train_name}</a> that has to be 
-        checked. """
+        {train_name} that has to be 
+        checked. 
+        <br>link {train_link}{train_name}"""
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
         html_with_modifications = html_with_text.format(train_name=data["trainId"],
@@ -257,7 +265,9 @@ class MessageDistributor:
     def _create_train_operation_required_html(self, data: dict, proposal_json: dict):
         html_template = self._load_html_template()
         text = """
-                                The train <a href="{train_link}{train_name}" target="_blank">{train_name}</a> from the proposal {proposal_name} was requires some operation.
+                                The train{train_name}
+                                from the proposal {proposal_name} was requires some operation.
+                                <br>link {train_link}{train_name}
                                 """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
