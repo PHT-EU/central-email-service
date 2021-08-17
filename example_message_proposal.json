@@ -1,7 +1,7 @@
 {
     "type": "proposalApproved" ,
     "data": {
-        "proposalId": "6",
+        "id": "6",
         "stationId": "1"
     }
 }

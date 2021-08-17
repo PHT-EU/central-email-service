@@ -38,7 +38,7 @@ class MessageDistributor:
 
     # proposal_operation_required
 
-    def process_proposal_operation_required(self, data: dict):
+    def process_proposal_assigned(self, data: dict):
         """
         Processing the message of type proposalOperationRequired
         by loading more information using the UI API using the proposalId,
@@ -47,15 +47,16 @@ class MessageDistributor:
         :param data: dict with the fields "proposalId" ,"stationId"
         :return:
         """
-        proposal_json = self._get_proposal_info(data["proposalId"])
+        proposal_json = self._get_proposal_info(data["id"])
         creator_json = self._get_user_info(proposal_json["user_id"])
-
+        target_station_json = self._get_station_info(data["stationId"])
         subject = "[PHT automated message]  operation required for proposal " + proposal_json["title"]
-        body_html = self._create_proposal_operation_required_body_html(proposal_json, creator_json)
+        body_html = self._create_proposal_operation_required_body_html(proposal_json, creator_json, target_station_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
 
-    def _create_proposal_operation_required_body_html(self, proposal_json: dict, creator_json: dict) -> str:
+    def _create_proposal_operation_required_body_html(self, proposal_json: dict, creator_json: dict,
+                                                      target_station_json: dict) -> str:
         """
 
         :param proposal_json: dict with information of the proposal
@@ -69,13 +70,13 @@ class MessageDistributor:
         The risk is {risk} with the assessment "{risk_comment}".
         <br> link {proposal_link}{proposalID} """
 
-        html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
+        html_with_text = html_template.format(text=text, receiver_name=target_station_json["name"])
         html_with_modifications = html_with_text.format(receiver_name=self.receiver_name,
                                                         proposal_link=self.proposal_link,
                                                         proposalID=proposal_json["id"],
                                                         title=proposal_json["title"],
                                                         user_name=creator_json["display_name"],
-                                                        realm_name=creator_json["realm"]["name"],
+                                                        realm_name=creator_json["realm_id"],
                                                         requested_data=proposal_json["requested_data"],
                                                         risk=proposal_json["risk"],
                                                         risk_comment=proposal_json["risk_comment"]
@@ -86,7 +87,7 @@ class MessageDistributor:
     # process_proposal_approved
 
     def process_proposal_approved(self, data: dict):
-        proposal_json = self._get_proposal_info(data["proposalId"])
+        proposal_json = self._get_proposal_info(data["id"])
         creator_json = self._get_user_info(proposal_json["user_id"])
 
         subject = "[PHT automated message] proposal approved " + proposal_json["title"]
@@ -102,7 +103,7 @@ class MessageDistributor:
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
         html_with_modifications = html_with_text.format(proposal_name=proposal_json["title"],
-                                                        realm_name=creator_json["realm"]["name"],
+                                                        realm_name=creator_json["realm_id"],
                                                         proposal_link=self.proposal_link,
                                                         proposalID=proposal_json["id"],
                                                         )
@@ -111,9 +112,9 @@ class MessageDistributor:
     # train_started
 
     def process_train_started(self, data: dict):
-        proposal_json = self._get_proposal_info(data["proposalId"])
-
-        subject = "[PHT automated message] Train " + data["trainId"] + " started"
+        train_json = self._get_train_info(data["id"])
+        proposal_json = self._get_proposal_info(train_json["proposal_id"])
+        subject = "[PHT automated message] Train " + data["id"] + " started"
         body_html = self._create_train_started_body_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
@@ -127,7 +128,7 @@ class MessageDistributor:
                 """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
-        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+        html_with_modifications = html_with_text.format(train_name=data["id"],
                                                         proposal_name=proposal_json["title"],
                                                         train_link=self.train_link
                                                         )
@@ -137,8 +138,9 @@ class MessageDistributor:
     # process_train_approved
 
     def process_train_approved(self, data: dict):
-        proposal_json = self._get_proposal_info(data["proposalId"])
-        subject = "[PHT automated message] Train " + data["trainId"] + " was approved"
+        train_json = self._get_train_info(data["id"])
+        proposal_json = self._get_proposal_info(train_json["proposal_id"])
+        subject = "[PHT automated message] Train " + data["id"] + " was approved"
         body_html = self._create_train_approved_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
@@ -152,7 +154,7 @@ class MessageDistributor:
                         """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
-        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+        html_with_modifications = html_with_text.format(train_name=data["id"],
                                                         proposal_name=proposal_json["title"],
                                                         train_link=self.train_link
                                                         )
@@ -161,8 +163,9 @@ class MessageDistributor:
     # train_built
 
     def process_train_built(self, data: dict):
-        proposal_json = self._get_proposal_info(data["proposalId"])
-        subject = "[PHT automated message] Train " + data["trainId"] + " was built"
+        train_json = self._get_train_info(data["id"])
+        proposal_json = self._get_proposal_info(train_json["proposal_id"])
+        subject = "[PHT automated message] Train " + data["id"] + " was built"
         body_html = self._create_train_built_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
@@ -176,7 +179,7 @@ class MessageDistributor:
                         """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
-        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+        html_with_modifications = html_with_text.format(train_name=data["id"],
                                                         proposal_name=proposal_json["title"],
                                                         train_link=self.train_link
                                                         )
@@ -185,8 +188,9 @@ class MessageDistributor:
     # train_finished
 
     def process_train_finished(self, data: dict):
-        proposal_json = self._get_proposal_info(data["proposalId"])
-        subject = "[PHT automated message] Train " + data["trainId"] + " is finished"
+        train_json = self._get_train_info(data["id"])
+        proposal_json = self._get_proposal_info(train_json["proposal_id"])
+        subject = "[PHT automated message] Train " + data["id"] + " is finished"
         body_html = self._create_train_finished_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
@@ -200,7 +204,7 @@ class MessageDistributor:
                         """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
-        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+        html_with_modifications = html_with_text.format(train_name=data["id"],
                                                         proposal_name=proposal_json["title"],
                                                         train_link=self.train_link
                                                         )
@@ -209,8 +213,9 @@ class MessageDistributor:
     # train_failed
 
     def process_train_failed(self, data: dict):
-        proposal_json = self._get_proposal_info(data["proposalId"])
-        subject = "[PHT automated message] Train " + data["trainId"] + " is failed"
+        train_json = self._get_train_info(data["id"])
+        proposal_json = self._get_proposal_info(train_json["proposal_id"])
+        subject = "[PHT automated message] Train " + data["id"] + " is failed"
         body_html = self._create_train_failed_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
@@ -224,7 +229,7 @@ class MessageDistributor:
                         """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
-        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+        html_with_modifications = html_with_text.format(train_name=data["id"],
                                                         proposal_name=proposal_json["title"],
                                                         train_link=self.train_link
                                                         )
@@ -232,8 +237,9 @@ class MessageDistributor:
 
     # train_received
 
-    def process_train_received(self, data: dict):
-        proposal_json = self._get_proposal_info(data["proposalId"])
+    def process_train_ready(self, data: dict):
+        train_json = self._get_train_info(data["id"])
+        proposal_json = self._get_proposal_info(train_json["proposal_id"])
         subject = "[PHT automated message] New train from " + proposal_json["title"]
         body_html = self._create_train_received_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
@@ -247,7 +253,7 @@ class MessageDistributor:
         <br>link {train_link}{train_name}"""
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
-        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+        html_with_modifications = html_with_text.format(train_name=data["id"],
                                                         proposal_name=proposal_json["title"],
                                                         train_link=self.train_link
                                                         )
@@ -255,9 +261,10 @@ class MessageDistributor:
 
     # train_operation_required
 
-    def process_train_operation_required(self, data: dict):
-        proposal_json = self._get_proposal_info(data["proposalId"])
-        subject = "[PHT automated message] operation required for train " + data["trainId"]
+    def process_train_assigned(self, data: dict):
+        train_json = self._get_train_info(data["id"])
+        proposal_json = self._get_proposal_info(train_json["proposal_id"])
+        subject = "[PHT automated message] operation required for train " + data["id"]
         body_html = self._create_train_operation_required_html(data, proposal_json)
         msg = self._build_msg(subject, body_html)
         self._send_email_to(msg)
@@ -271,7 +278,7 @@ class MessageDistributor:
                                 """
         html_with_text = html_template.format(text=text, receiver_name=self.receiver_name)
 
-        html_with_modifications = html_with_text.format(train_name=data["trainId"],
+        html_with_modifications = html_with_text.format(train_name=data["id"],
                                                         proposal_name=proposal_json["title"],
                                                         train_link=self.train_link
                                                         )
@@ -337,12 +344,23 @@ class MessageDistributor:
 
     def _get_proposal_info(self, proposal_id: int) -> dict:
         get_proposal_url = self.ui_address + "proposals/" + str(proposal_id)
+        pprint_json(requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json())
         return requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json()
 
     def _get_user_info(self, user_id: int) -> dict:
-        get_proposal_url = self.ui_address + "users/" + str(user_id)
-        return requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json()
+        get_users_url = self.ui_address + "users/" + str(user_id)
+        pprint_json(requests.get(get_users_url, auth=(self.ui_user, self.ui_token)).json())
+        return requests.get(get_users_url, auth=(self.ui_user, self.ui_token)).json()
 
+    def _get_station_info(self, user_id: int) -> dict:
+        get_stations_url = self.ui_address + "stations/" + str(user_id)
+        pprint_json(requests.get(get_stations_url, auth=(self.ui_user, self.ui_token)).json())
+        return requests.get(get_stations_url, auth=(self.ui_user, self.ui_token)).json()
+
+    def _get_train_info(self, user_id: int) -> dict:
+        get_stations_url = self.ui_address + "trains/" + str(user_id)
+        pprint_json(requests.get(get_stations_url, auth=(self.ui_user, self.ui_token)).json())
+        return requests.get(get_stations_url, auth=(self.ui_user, self.ui_token)).json()
 
 def pprint_json(data: dict):
     print(json.dumps(data, indent=2, sort_keys=True))

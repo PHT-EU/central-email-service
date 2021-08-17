@@ -55,8 +55,9 @@ class MassageConsumer(Consumer):
         :param msg: the json massage with type and data as attributes
         :return:
         """
-        if msg["type"] == "proposalOperationRequired":
-            self.md.process_proposal_operation_required(msg["data"])
+        print(msg)
+        if msg["type"] == "proposalAssigned":
+            self.md.process_proposal_assigned(msg["data"])
 
         elif msg["type"] == "proposalApproved":
             self.md.process_proposal_approved(msg["data"])
@@ -76,11 +77,11 @@ class MassageConsumer(Consumer):
         elif msg["type"] == "trainFailed":
             self.md.process_train_failed(msg["data"])
 
-        elif msg["type"] == "trainReceived":
-            self.md.process_train_received(msg["data"])
+        elif msg["type"] == "trainReady":
+            self.md.process_train_ready(msg["data"])
 
-        elif msg["type"] == "trainOperationRequired":
-            self.md.process_train_operation_required(msg["data"])
+        elif msg["type"] == "trainAssigned":
+            self.md.process_train_assigned(msg["data"])
 
         else:
             LOGGER.info(f"Invalid event {msg['type']}")
