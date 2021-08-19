@@ -386,8 +386,7 @@ class MessageDistributor:
 
     def _get_station_email(self, station_id: int) -> str:
         get_url = self.ui_address + "stations/" + str(station_id) + "?fields=email"
-        print(get_url)
-        pprint_json(requests.get(get_url, auth=(self.ui_user, self.ui_token)).json())
+        # pprint_json(requests.get(get_url, auth=(self.ui_user, self.ui_token)).json())
         return requests.get(get_url, auth=(self.ui_user, self.ui_token)).json()["email"]
 
 
