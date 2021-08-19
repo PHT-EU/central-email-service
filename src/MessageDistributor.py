@@ -28,9 +28,6 @@ class MessageDistributor:
         self.ui_token = os.getenv("UI_TOKEN")
         self.ui_address = os.getenv("UI_ADDRESS")
 
-        # target mail
-        self.mail_target = "david.hieber@uni-tuebingen.de"
-        self.receiver_name = "David"
 
         # links to the UI pages
         self.proposal_link = "https://pht.tada5hi.net/proposals/"
@@ -52,7 +49,9 @@ class MessageDistributor:
         target_station_json = self._get_station_info(data["stationId"])
         subject = "[PHT automated message]  operation required for proposal " + proposal_json["title"]
         body_html = self._create_proposal_operation_required_body_html(proposal_json, creator_json, target_station_json)
-        msg = self._build_msg(subject, body_html)
+        email_target = self._get_station_email(data["stationId"])
+        msg = self._build_msg(subject, body_html, email_target)
+
         self._send_email_to(msg)
 
     def _create_proposal_operation_required_body_html(self, proposal_json: dict, creator_json: dict,
@@ -71,7 +70,7 @@ class MessageDistributor:
         <br> link {proposal_link}{proposalID} """
 
         html_with_text = html_template.format(text=text, receiver_name=target_station_json["name"])
-        html_with_modifications = html_with_text.format(receiver_name=self.receiver_name,
+        html_with_modifications = html_with_text.format(receiver_name=target_station_json["name"],
                                                         proposal_link=self.proposal_link,
                                                         proposalID=proposal_json["id"],
                                                         title=proposal_json["title"],
@@ -92,7 +91,8 @@ class MessageDistributor:
         target_station_json = self._get_station_info(data["stationId"])
         subject = "[PHT automated message] proposal approved " + proposal_json["title"]
         body_html = self._create_proposal_approved_body_html(proposal_json, creator_json, target_station_json)
-        msg = self._build_msg(subject, body_html)
+        email_target = self._get_station_email(data["stationId"])
+        msg = self._build_msg(subject, body_html, email_target)
         self._send_email_to(msg)
 
     def _create_proposal_approved_body_html(self, proposal_json: dict, creator_json: dict,
@@ -118,7 +118,8 @@ class MessageDistributor:
         target_station_json = self._get_station_info(data["stationId"])
         subject = "[PHT automated message] Train " + data["id"] + " started"
         body_html = self._create_train_started_body_html(data, proposal_json, target_station_json)
-        msg = self._build_msg(subject, body_html)
+        email_target = self._get_station_email(data["stationId"])
+        msg = self._build_msg(subject, body_html, email_target)
         self._send_email_to(msg)
 
     def _create_train_started_body_html(self, data: dict, proposal_json: dict,
@@ -146,7 +147,8 @@ class MessageDistributor:
         target_station_json = self._get_station_info(data["stationId"])
         subject = "[PHT automated message] Train " + data["id"] + " was approved"
         body_html = self._create_train_approved_html(data, proposal_json, target_station_json)
-        msg = self._build_msg(subject, body_html)
+        email_target = self._get_station_email(data["stationId"])
+        msg = self._build_msg(subject, body_html, email_target)
         self._send_email_to(msg)
 
     def _create_train_approved_html(self, data: dict, proposal_json: dict,
@@ -173,7 +175,8 @@ class MessageDistributor:
         target_station_json = self._get_station_info(data["stationId"])
         subject = "[PHT automated message] Train " + data["id"] + " was built"
         body_html = self._create_train_built_html(data, proposal_json, target_station_json)
-        msg = self._build_msg(subject, body_html)
+        email_target = self._get_station_email(data["stationId"])
+        msg = self._build_msg(subject, body_html, email_target)
         self._send_email_to(msg)
 
     def _create_train_built_html(self, data: dict, proposal_json: dict,
@@ -200,7 +203,8 @@ class MessageDistributor:
         target_station_json = self._get_station_info(data["stationId"])
         subject = "[PHT automated message] Train " + data["id"] + " is finished"
         body_html = self._create_train_finished_html(data, proposal_json, target_station_json)
-        msg = self._build_msg(subject, body_html)
+        email_target = self._get_station_email(data["stationId"])
+        msg = self._build_msg(subject, body_html, email_target)
         self._send_email_to(msg)
 
     def _create_train_finished_html(self, data: dict, proposal_json: dict,
@@ -227,7 +231,8 @@ class MessageDistributor:
         target_station_json = self._get_station_info(data["stationId"])
         subject = "[PHT automated message] Train " + data["id"] + " is failed"
         body_html = self._create_train_failed_html(data, proposal_json, target_station_json)
-        msg = self._build_msg(subject, body_html)
+        email_target = self._get_station_email(data["stationId"])
+        msg = self._build_msg(subject, body_html, email_target)
         self._send_email_to(msg)
 
     def _create_train_failed_html(self, data: dict, proposal_json: dict,
@@ -254,7 +259,8 @@ class MessageDistributor:
         target_station_json = self._get_station_info(data["stationId"])
         subject = "[PHT automated message] New train from " + proposal_json["title"]
         body_html = self._create_train_received_html(data, proposal_json, target_station_json)
-        msg = self._build_msg(subject, body_html)
+        email_target = self._get_station_email(data["stationId"])
+        msg = self._build_msg(subject, body_html, email_target)
         self._send_email_to(msg)
 
     def _create_train_received_html(self, data: dict, proposal_json: dict,
@@ -280,7 +286,8 @@ class MessageDistributor:
         target_station_json = self._get_station_info(data["stationId"])
         subject = "[PHT automated message] operation required for train " + data["id"]
         body_html = self._create_train_operation_required_html(data, proposal_json, target_station_json)
-        msg = self._build_msg(subject, body_html)
+        email_target = self._get_station_email(data["stationId"])
+        msg = self._build_msg(subject, body_html, email_target)
         self._send_email_to(msg)
 
     def _create_train_operation_required_html(self, data: dict, proposal_json: dict,
@@ -341,7 +348,7 @@ class MessageDistributor:
             html_template = f.read()
         return html_template
 
-    def _build_msg(self, subject: str, body_html: str) -> MIMEMultipart:
+    def _build_msg(self, subject: str, body_html: str, mail_target: str) -> MIMEMultipart:
         """
         fils in the relevant fields for a MIMEMultipart and retruns it
         :param subject:
@@ -352,30 +359,36 @@ class MessageDistributor:
         msg["Subject"] = subject
         msg["From"] = self.smtp_mail_from
         # TODO later the corect resipienc have to be selectet
-        msg["To"] = self.mail_target
+        msg["To"] = mail_target
         body = MIMEText(body_html, "html")
         msg.attach(body)
         return msg
 
     def _get_proposal_info(self, proposal_id: int) -> dict:
         get_proposal_url = self.ui_address + "proposals/" + str(proposal_id)
-        pprint_json(requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json())
+        # pprint_json(requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json())
         return requests.get(get_proposal_url, auth=(self.ui_user, self.ui_token)).json()
 
     def _get_user_info(self, user_id: int) -> dict:
         get_users_url = self.ui_address + "users/" + str(user_id)
-        pprint_json(requests.get(get_users_url, auth=(self.ui_user, self.ui_token)).json())
+        # pprint_json(requests.get(get_users_url, auth=(self.ui_user, self.ui_token)).json())
         return requests.get(get_users_url, auth=(self.ui_user, self.ui_token)).json()
 
-    def _get_station_info(self, user_id: int) -> dict:
-        get_stations_url = self.ui_address + "stations/" + str(user_id)
-        pprint_json(requests.get(get_stations_url, auth=(self.ui_user, self.ui_token)).json())
+    def _get_station_info(self, station_id: int) -> dict:
+        get_stations_url = self.ui_address + "stations/" + str(station_id)
+        # pprint_json(requests.get(get_stations_url, auth=(self.ui_user, self.ui_token)).json())
         return requests.get(get_stations_url, auth=(self.ui_user, self.ui_token)).json()
 
-    def _get_train_info(self, user_id: int) -> dict:
-        get_stations_url = self.ui_address + "trains/" + str(user_id)
-        pprint_json(requests.get(get_stations_url, auth=(self.ui_user, self.ui_token)).json())
-        return requests.get(get_stations_url, auth=(self.ui_user, self.ui_token)).json()
+    def _get_train_info(self, train_id: int) -> dict:
+        get_train_url = self.ui_address + "trains/" + str(train_id)
+        # pprint_json(requests.get(get_train_url, auth=(self.ui_user, self.ui_token)).json())
+        return requests.get(get_train_url, auth=(self.ui_user, self.ui_token)).json()
+
+    def _get_station_email(self, station_id: int) -> str:
+        get_url = self.ui_address + "stations/" + str(station_id) + "?fields=email"
+        print(get_url)
+        pprint_json(requests.get(get_url, auth=(self.ui_user, self.ui_token)).json())
+        return requests.get(get_url, auth=(self.ui_user, self.ui_token)).json()["email"]
 
 
 def pprint_json(data: dict):
