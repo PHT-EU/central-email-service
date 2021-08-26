@@ -4,8 +4,9 @@ stages:
 
 build:
   stage: build
+  when: on_success
   only:
-    - master
+    - main
   image: docker:stable
   services:
     - docker:dind
