@@ -4,7 +4,6 @@ stages:
 
 build:
   stage: build
-  when: on_success
   only:
     - master
   image: docker:stable
