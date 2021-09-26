@@ -1,1 +1,4 @@
+.idea
+dist
+.env
 static_setup.json
