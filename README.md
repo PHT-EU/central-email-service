@@ -1,4 +1,9 @@
-### PHT Email Service
+[![Build and push image](https://github.com/PHT-Medic/central-email-service/actions/workflows/CI.yml/badge.svg)](https://github.com/PHT-Medic/central-email-service/actions/workflows/CI.yml)
+[![CodeQL](https://github.com/PHT-Medic/central-email-service/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/PHT-Medic/central-email-service/actions/workflows/codeql-analysis.yml)
+[![Vulnerability Scan](https://github.com/PHT-Medic/central-email-service/actions/workflows/image_scan.yml/badge.svg)](https://github.com/PHT-Medic/central-email-service/actions/workflows/image_scan.yml)
+
+
+# PHT Email Service
 
 PHT Email Service is implementing a microservice listening to rabbitmq messages and sending out email notifications to the station admins regarding new trains that can be approved or ready for a station to execute.
 
