@@ -35,4 +35,4 @@ jobs:
       - name: Scan image
         uses: Azure/container-scan@v0
         with:
-          image-name: ghcr.io/pht-medic/central-email-service:latest
+          image-name: ghcr.io/pht-medic/central-email-service:main
