@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+hvac = {extras = ["parser"], version = "*"}
+pika = "*"
+requests = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
